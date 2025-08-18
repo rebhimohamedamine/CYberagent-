@@ -1,0 +1,191 @@
+{
+  "name": "consultant workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -40
+      ],
+      "id": "e1e4c961-e39c-4386-8733-b71d42c8d396",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "zlUBOLz6aHdxokv6",
+          "name": "Groq account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Tu es un expert en stratégie IA. Ta mission est de conseiller les entreprises sur l’implémentation de l’intelligence artificielle. Tu raisonnes par étapes, en posant des questions ciblées. Tu adaptes ton langage au niveau de maturité du client.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -320
+      ],
+      "id": "5dded958-065f-404b-8f1b-2f009b7b95fd",
+      "name": "Consultant IA"
+    },
+    {
+      "parameters": {
+        "model": "all-minilm:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        700,
+        60
+      ],
+      "id": "ee41c936-5e2d-4df5-bbd8-ea3f5d642a81",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dqKxdTg95sILOOot",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledgeBase",
+        "toolDescription": "The knowledge base to answer user questions",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "knowledge_base_v1",
+          "mode": "list",
+          "cachedResultName": "knowledge_base_v1"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        -100
+      ],
+      "id": "547abc45-d9eb-46b5-9f39-916d2e3af5f5",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "qAg98wkniOUQ9RVM",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        -320
+      ],
+      "id": "bddabdc1-2195-4aa2-9e13-b8791102aff3",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        -80
+      ],
+      "id": "1212c7ff-165e-4274-a29b-debebf5878c9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kDmmT7LQfMoo1Q17",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Consultant IA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Consultant IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Consultant IA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a84bfe20-ab9f-4e1f-96dd-70b6375de9f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "5zb5YGWwZQ8GOX8i",
+  "tags": []
+}

@@ -1,0 +1,903 @@
+{
+  "name": "Main workflow Crewai",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/choose-agent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "question",
+              "value": "={{ $json.body.message }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        -160
+      ],
+      "id": "05c91407-5ffe-4b13-9fad-54d781633176",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Consultant IA workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9cd35781-fc80-4588-8557-23a92939a799"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consultant IA "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0916c306-6670-4f8c-bed1-a902550b92e6",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Analyste FinOps workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Analyste FinOps "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "70c6ef4c-c947-41d6-8624-a3c80b8e59da",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Architecte Cybersécurité workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Architecte Cybersécurité "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "814803f2-6cd1-4433-8f65-6def3e75ca69",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Expert Data Gouvernance workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Expert Data Gouvernance"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2d560878-6041-434b-81e1-b7a14fa6e71a",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Expert Risk Management workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Expert Risk Management"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0796b76b-87bb-412e-9f0b-34e19ea04e85",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Spécialiste Identity & Access Management workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Spécialiste Identity & Access Management"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3a61dada-930b-4438-9e27-2f63390a29d1",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Ingénieur Privacy & Protection workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ingénieur Privacy & Protection"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "51dfc2c8-c957-478d-b8fc-d6ed1ca643d8",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "Cloud Architect Workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cloud Architect "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "63baadf3-babf-4827-bd3e-52198e2cc56b",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "=Compliance Officer Workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Compliance Officer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dbdd3bdf-caa6-458f-9c4a-ed8b7eab6df2",
+                    "leftValue": "={{ $json.selected_agent }}",
+                    "rightValue": "DevSecOps Expert Workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DevSecOps Expert "
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true,
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        600,
+        -320
+      ],
+      "id": "486f1eb6-4a55-4843-ade7-a62c510a3513",
+      "name": "Switch",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "5zb5YGWwZQ8GOX8i",
+          "mode": "list",
+          "cachedResultName": "consultant workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1660,
+        -1080
+      ],
+      "id": "9adcfbe5-4084-4450-841c-4a05a7a2a995",
+      "name": "Execute Consultant IA Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "GL0mPP0b62wBDGTC",
+          "mode": "list",
+          "cachedResultName": "Finops Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        -860
+      ],
+      "id": "b95f7a02-41cd-47d9-bfd9-c908a519dc70",
+      "name": "Execute Analyste Finops  Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iONCdqvtybzh19lH",
+          "mode": "list",
+          "cachedResultName": "Architect Cybersecurity workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        -640
+      ],
+      "id": "c42d3bf8-4aa9-4b35-b0b9-e26046f96cb5",
+      "name": "Execute Architecte Cybersecurity Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "I6rWnLX1oKnKOYAQ",
+          "mode": "list",
+          "cachedResultName": "Expert Data governance workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        -420
+      ],
+      "id": "56a90002-d7f6-46ce-a8af-fc076c7a69b1",
+      "name": "Execute Expert Data Governance Workflow"
+    },
+    {
+      "parameters": {
+        "command": "kill -9 $(lsof -t -i:8000)\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -1100,
+        -600
+      ],
+      "id": "809fa017-a06c-4828-8570-2940df347461",
+      "name": "Stop Server"
+    },
+    {
+      "parameters": {
+        "command": "nohup uvicorn cyberagent.main2:app --host 0.0.0.0 --port 8000 --app-dir /home/rebhi/Desktop > /tmp/uvicorn.log 2>&1 &"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -480
+      ],
+      "id": "8d2eee49-4f98-41c9-9b7a-db95677d6553",
+      "name": "Run Server",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -220,
+        -160
+      ],
+      "id": "f5ad3c3f-63e4-4f66-aab4-ac4deccdb0bc",
+      "name": "Wait",
+      "webhookId": "4fe1f54b-99cd-4aa7-a16c-1ccedf1889b1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-message",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -840,
+        -160
+      ],
+      "id": "db217c11-43e3-4dc5-9fe0-534fab9367b5",
+      "name": "Webhook",
+      "webhookId": "648f69ed-0cd8-4f69-957f-1d783b4c60fc"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": {{ JSON.stringify($json.output) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2940,
+        -160
+      ],
+      "id": "74a97fbb-c9cb-4442-8a01-c686d8e07e7c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "oLPJ0LX9gnnq6obt",
+          "mode": "list",
+          "cachedResultName": "Expert Risk Management workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        -200
+      ],
+      "id": "619aba4b-e6e8-4f9a-b98e-d6a94f95bceb",
+      "name": "Execute Expert Risk Management workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NefyTA3FkrA1eixh",
+          "mode": "list",
+          "cachedResultName": "Spécialiste Identity & Access Management workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        0
+      ],
+      "id": "4bfda4ea-bdb4-4193-86c3-6d0eb4c83244",
+      "name": "Execute Spécialiste Identity & Access Management workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wVJbCCrCN2x0ATuJ",
+          "mode": "list",
+          "cachedResultName": "Ingénieur Privacy & Protection workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1700,
+        220
+      ],
+      "id": "720d13f7-5459-4753-b006-127a3c4d11a4",
+      "name": "Execute Ingénieur Privacy & Protection workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "uTKXgs6G5yYoUBeZ",
+          "mode": "list",
+          "cachedResultName": "Cloud Architect Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        420
+      ],
+      "id": "44e63fe4-aca2-43da-8657-d380cddd16ba",
+      "name": "Execute Cloud Architect Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "wkvE2UidaVZOZkIf",
+          "mode": "list",
+          "cachedResultName": "Compliance Officer Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        660
+      ],
+      "id": "2b0b65b7-acb4-4bd0-ba23-f9d730dd4e94",
+      "name": "Execute Compliance Officer Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "s5C9tP8RJxw1g29K",
+          "mode": "list",
+          "cachedResultName": "DevSecOps Expert Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        860
+      ],
+      "id": "f5b76b7d-9063-430e-bcd0-9bfdec4cca9f",
+      "name": "Execute DevSecOps Expert Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Execute Consultant IA Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Analyste Finops  Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Architecte Cybersecurity Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Expert Data Governance Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Expert Risk Management workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Spécialiste Identity & Access Management workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Ingénieur Privacy & Protection workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Cloud Architect Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Compliance Officer Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute DevSecOps Expert Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Server": {
+      "main": [
+        []
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Run Server",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Consultant IA Workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Analyste Finops  Workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Architecte Cybersecurity Workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Expert Data Governance Workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Execute Expert Risk Management workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Spécialiste Identity & Access Management workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Ingénieur Privacy & Protection workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Cloud Architect Workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Compliance Officer Workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute DevSecOps Expert Workflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cc503631-3d25-40ce-b03b-269fa58957ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "7OTagdxl57oQzDlf",
+  "tags": []
+}

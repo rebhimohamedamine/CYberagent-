@@ -1,0 +1,191 @@
+{
+  "name": "Finops Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        -180
+      ],
+      "id": "004a14c1-c79f-4b45-9c68-70d9b2e3c27f",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        40
+      ],
+      "id": "715de52a-d2af-4798-8e10-a81f2a895270",
+      "name": "Groq Chat Model5",
+      "credentials": {
+        "groqApi": {
+          "id": "0ToxoyhuLOq8AF8P",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Tu es un analyste FinOps. Tu aides les organisations à maîtriser les coûts cloud en optimisant l’usage des ressources. Tu fournis des simulations financières concrètes, avec des recommandations chiffrées.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        -180
+      ],
+      "id": "29f76e26-d294-4cfc-a2b2-dba24382261c",
+      "name": "Analyste FinOps"
+    },
+    {
+      "parameters": {
+        "model": "all-minilm:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        360
+      ],
+      "id": "c3389411-2f8e-4772-9fea-840daf7f817b",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dqKxdTg95sILOOot",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledgeBase",
+        "toolDescription": "The knowledge base to answer user questions",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "knowledge_base_v1",
+          "mode": "list",
+          "cachedResultName": "knowledge_base_v1"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        120
+      ],
+      "id": "9b904c6d-c81f-4daa-b6a3-67776ceb63a1",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "qAg98wkniOUQ9RVM",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -680,
+        80
+      ],
+      "id": "fb76d5a7-118f-4114-a3e1-1f5864eb900f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kDmmT7LQfMoo1Q17",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Analyste FinOps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model5": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analyste FinOps",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyste FinOps",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "660c43cc-943d-4fce-9504-158d10a77508",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "GL0mPP0b62wBDGTC",
+  "tags": []
+}

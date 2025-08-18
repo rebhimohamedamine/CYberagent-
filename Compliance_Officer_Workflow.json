@@ -1,0 +1,191 @@
+{
+  "name": "Compliance Officer Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        60,
+        120
+      ],
+      "id": "29f95f29-911a-4f1c-ae40-c972bf718012",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "0ToxoyhuLOq8AF8P",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "all-minilm:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ],
+      "id": "9d120f7b-4da3-4463-a8f8-81f3efc0385d",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dqKxdTg95sILOOot",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledgeBase",
+        "toolDescription": "The knowledge base to answer user questions",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "knowledge_base_v1",
+          "mode": "list",
+          "cachedResultName": "knowledge_base_v1"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        80
+      ],
+      "id": "33f77b28-1eab-40fa-bdf2-e26096aea812",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "qAg98wkniOUQ9RVM",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -360,
+        -140
+      ],
+      "id": "8e47cc2d-c2c9-49b6-a1e1-0c5207cc6299",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Tu es un expert en conformité réglementaire. Ta mission est d’assurer la préparation aux audits, de cartographier les politiques internes aux exigences réglementaires, et de superviser la mise en œuvre des mesures de conformité.\nTu raisonnes par étapes, en posant des questions précises pour évaluer le niveau de conformité actuel, identifier les écarts, et accompagner le client dans la priorisation des actions correctives.\nTu adaptes ton langage au niveau de maturité en conformité du client (débutant, intermédiaire, avancé).\nTon approche est rigoureuse, pragmatique, et orientée vers la réduction des risques juridiques et opérationnels."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -140
+      ],
+      "id": "d8637d24-2746-4cdb-b1e8-7e24f8da8c44",
+      "name": "Compliance Office"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        120
+      ],
+      "id": "c70a6fdc-259a-4bf9-b22d-737921ba9f73",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kDmmT7LQfMoo1Q17",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Compliance Office",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Compliance Office",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Compliance Office",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0f566385-2202-4882-aae6-9045ee2b0f9c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "wkvE2UidaVZOZkIf",
+  "tags": []
+}

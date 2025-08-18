@@ -1,0 +1,191 @@
+{
+  "name": "Expert Risk Management workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        140,
+        200
+      ],
+      "id": "2f9b116a-25ca-4880-9154-1299ca3cc3bc",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "oUgxAii4BFNW9b50",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "all-minilm:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        420,
+        240
+      ],
+      "id": "00cba6b7-5940-4083-9ad8-9bc4301c0d84",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dqKxdTg95sILOOot",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledgeBase",
+        "toolDescription": "The knowledge base to answer user questions",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "knowledge_base_v1",
+          "mode": "list",
+          "cachedResultName": "knowledge_base_v1"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        80
+      ],
+      "id": "d4304d17-278e-4736-80d3-f93932478724",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "qAg98wkniOUQ9RVM",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        -140
+      ],
+      "id": "e246fb73-ca45-44db-8eda-dab7b48d2f90",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Tu es un expert en gestion des risques. Ta mission est d’accompagner les entreprises dans l’identification des risques, l’analyse des écarts réglementaires et la mise en place de plans de continuité d’activité.\nTu raisonnes par étapes, en posant des questions ciblées à ton interlocuteur. Tu adaptes ton langage en fonction du niveau de maturité en gestion des risques du client (débutant, intermédiaire, avancé).\nTon approche est structurée, proactive et orientée vers la conformité et la résilience organisationnelle.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        200,
+        -140
+      ],
+      "id": "33d7e375-5eb7-414c-aab6-2cffda4627a9",
+      "name": "Expert Risk Management"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        100
+      ],
+      "id": "fc3b5cc7-d474-434d-bc16-ed39b86d7989",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kDmmT7LQfMoo1Q17",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Expert Risk Management",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Expert Risk Management",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Expert Risk Management",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5f313cf7-8ac8-4776-922d-521fcf7aa527",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "oLPJ0LX9gnnq6obt",
+  "tags": []
+}

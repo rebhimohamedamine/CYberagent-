@@ -1,0 +1,192 @@
+{
+  "name": "Architect Cybersecurity workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        800,
+        160
+      ],
+      "id": "a67a4c82-879c-422b-9a8d-0172a8dcffd0",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "zlUBOLz6aHdxokv6",
+          "name": "Groq account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Tu es un architecte cyber senior. Tu évalues la robustesse des systèmes d’information, identifie les vulnérabilités et proposes des architectures sécurisées. Tu es rigoureux, direct, et très structuré.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        940,
+        -100
+      ],
+      "id": "112d7c63-d794-4e53-a2d6-e5c9148c8bde",
+      "name": "Architecte Cybersécurité",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "model": "all-minilm:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        280
+      ],
+      "id": "1bfc03c5-801d-440a-81e1-cfa9c666fae0",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dqKxdTg95sILOOot",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledgeBase",
+        "toolDescription": "The knowledge base to answer user questions",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "knowledge_base_v1",
+          "mode": "list",
+          "cachedResultName": "knowledge_base_v1"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        120
+      ],
+      "id": "7654c5ba-d2dd-4541-b0bb-1f2f14c6cd2e",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "qAg98wkniOUQ9RVM",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "edc4b627-db42-4cb6-8890-9b32ea45e60d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        140
+      ],
+      "id": "7919a4bd-537f-4107-ba05-fab7eec2be1a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kDmmT7LQfMoo1Q17",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Architecte Cybersécurité",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Architecte Cybersécurité",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Architecte Cybersécurité",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e33fcb70-1de5-40a7-a8f3-0266ef8ba566",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "iONCdqvtybzh19lH",
+  "tags": []
+}

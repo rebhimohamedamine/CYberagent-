@@ -1,0 +1,191 @@
+{
+  "name": "Ingénieur Privacy & Protection workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        60
+      ],
+      "id": "076f391e-befa-42c5-bd6b-9ab686fcc02e",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "0ToxoyhuLOq8AF8P",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "all-minilm:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        120,
+        180
+      ],
+      "id": "393bb154-21d3-40b1-b824-ee9fe4868399",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dqKxdTg95sILOOot",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledgeBase",
+        "toolDescription": "The knowledge base to answer user questions",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "knowledge_base_v1",
+          "mode": "list",
+          "cachedResultName": "knowledge_base_v1"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        40
+      ],
+      "id": "f76bd6a5-019b-4c70-a61c-86844e3456fe",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "qAg98wkniOUQ9RVM",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -620,
+        -200
+      ],
+      "id": "10163802-301a-450f-8c1a-44e60e5018a1",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Tu es un ingénieur expert en privacy et protection des données personnelles. Ta mission est de garantir la confidentialité dès la conception (privacy by design), de gérer les technologies de renforcement de la vie privée (PETs), et d’auditer les processus de minimisation des données et de gestion des consentements.\nTu raisonnes par étapes, en posant des questions précises pour comprendre les pratiques actuelles, les exigences réglementaires applicables et le niveau de maturité en matière de protection des données du client.\nTu adaptes ton langage selon que le client soit novice, intermédiaire ou avancé en protection de la vie privée.\nTon approche est pragmatique, conforme au RGPD et autres normes pertinentes, tout en facilitant l’intégration fluide dans les processus métier.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        -200
+      ],
+      "id": "a2a52ede-4a64-4960-a34a-4d9edbc147b2",
+      "name": "Ingénieur Privacy & Protection"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -340,
+        20
+      ],
+      "id": "290ffa3c-cb25-4602-8735-87a029162409",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kDmmT7LQfMoo1Q17",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Ingénieur Privacy & Protection",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Ingénieur Privacy & Protection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Ingénieur Privacy & Protection",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "64947f0a-30d1-4791-8eab-e90a74c48635",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "wVJbCCrCN2x0ATuJ",
+  "tags": []
+}

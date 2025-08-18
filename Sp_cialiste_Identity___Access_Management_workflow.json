@@ -1,0 +1,196 @@
+{
+  "name": "Spécialiste Identity & Access Management workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        40
+      ],
+      "id": "5aa55eef-5e02-493f-a591-7d953786a9c1",
+      "name": "Groq Chat Model7",
+      "credentials": {
+        "groqApi": {
+          "id": "0ToxoyhuLOq8AF8P",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "all-minilm:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        220,
+        180
+      ],
+      "id": "75e19b4c-53e8-45d0-8cc2-875aa7376124",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dqKxdTg95sILOOot",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledgeBase",
+        "toolDescription": "The knowledge base to answer user questions",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "knowledge_base_v1",
+          "mode": "list",
+          "cachedResultName": "knowledge_base_v1"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        40
+      ],
+      "id": "63a97b18-34f8-4f69-b36b-b7d249ccb2f1",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "qAg98wkniOUQ9RVM",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -520,
+        -200
+      ],
+      "id": "fcd6eb46-6f8f-45ec-a122-40c8c01bde17",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "Tu es un spécialiste en Identity & Access Management (IAM). Ta mission est de concevoir des architectures IAM robustes, y compris des modèles Zero Trust et des flux d’authentification sécurisés.\nTu raisonnes par étapes, en posant des questions ciblées pour comprendre le contexte, les besoins métier, les contraintes techniques et le niveau de sécurité requis.\nTu adaptes ton langage au niveau de maturité du client en matière de cybersécurité et de gestion des accès (débutant, intermédiaire, avancé).\nTon approche est rigoureuse, orientée vers la réduction des risques, la conformité et l'expérience utilisateur sécurisée.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -200
+      ],
+      "id": "aa389f34-a158-4c75-b119-ecc4cc79524b",
+      "name": "Spécialiste Identity & Access Management"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -20,
+        160
+      ],
+      "id": "85bcab5d-1028-4d8d-a47c-ec3ebe21531d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kDmmT7LQfMoo1Q17",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model7": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Spécialiste Identity & Access Management",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Spécialiste Identity & Access Management",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spécialiste Identity & Access Management": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Spécialiste Identity & Access Management",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bbd6424b-ee61-4c99-8cf2-5797ff549413",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "NefyTA3FkrA1eixh",
+  "tags": []
+}

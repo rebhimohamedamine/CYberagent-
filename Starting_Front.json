@@ -1,0 +1,53 @@
+{
+  "name": "Starting Front",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ef4fc7b7-5f5f-4e31-bc9b-b2b47903891b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "command": "cd /home/rebhi/Desktop/project && npm run dev\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "c5527fb7-b25c-4a5f-a166-57160c049733",
+      "name": "Execute Command"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "455b74e3-34e0-464c-8723-303055aaa305",
+  "meta": {
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "aBnNMRad4C7KO8ne",
+  "tags": []
+}

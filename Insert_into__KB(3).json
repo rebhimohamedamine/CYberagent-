@@ -1,0 +1,916 @@
+{
+  "name": "Insert into  KB",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        340
+      ],
+      "id": "4cf2985b-e95f-4a68-88ed-64e92c66abcc",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "deleteCollection",
+        "collectionName": {
+          "__rl": true,
+          "value": "VectorBase",
+          "mode": "name"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        120
+      ],
+      "id": "118dc9ca-5370-4976-a5af-98781af985e3",
+      "name": "Delete Collection",
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "N292H1UB04azhqg1",
+          "name": "Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createCollection",
+        "collectionName": "Knowledge_base",
+        "shardNumber": {},
+        "replicationFactor": {},
+        "writeConsistencyFactor": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        4300,
+        120
+      ],
+      "id": "04143c2c-dd51-40e6-9e7b-61492a1fcdbd",
+      "name": "Create Collection",
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "N292H1UB04azhqg1",
+          "name": "Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Initialisation collection",
+        "height": 300,
+        "width": 980,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        -20
+      ],
+      "id": "7bf35ee3-8a35-40cc-a938-8ae9168cff42",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Download the new files updated in the drive folder",
+        "height": 960,
+        "width": 1480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        -20
+      ],
+      "id": "12645573-2d1f-4226-8901-3f60f28d81d6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Add embedded chunks to the KB\n",
+        "height": 660,
+        "width": 980
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        280
+      ],
+      "id": "e85d81fe-910e-46b7-b924-61ab5aae5464",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Cleaning and Semantic Chunking",
+        "height": 960,
+        "width": 1200,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        -20
+      ],
+      "id": "c7a5d525-ecd9-4fcb-8b30-815b728b3d9b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Semantic chunking",
+        "height": 80,
+        "width": 360,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        -200
+      ],
+      "id": "5f9cfde0-e51e-4119-948f-5fad5e41593c",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const document_text = items[0].json.text;\n\nclass FlexibleDocumentChunker {\n    constructor() {\n        this.sectionPatterns = [\n            {\n                main: /^([IVX]+)\\.\\s+(.+)$/,\n                sub: /^([IVX]+\\.\\d+)\\.\\s+(.+)$/,\n                subsub: /^([IVX]+\\.\\d+\\.\\d+)\\.\\s+(.+)$/,\n                name: 'roman'\n            },\n            {\n                main: /^(\\d+)\\s+(.+)$/,  // Changed: removed requirement for dot after number\n                sub: /^(\\d+\\.\\d+)\\s+(.+)$/,\n                subsub: /^(\\d+\\.\\d+\\.\\d+)\\s+(.+)$/,\n                name: 'arabic'\n            },\n            {\n                // New pattern for mixed formats (number + text without strict dot requirement)\n                main: /^(\\d+)\\s*[-.]?\\s*(.+)$/,\n                sub: /^(\\d+\\.\\d+)\\s*[-.]?\\s*(.+)$/,\n                subsub: /^(\\d+\\.\\d+\\.\\d+)\\s*[-.]?\\s*(.+)$/,\n                name: 'flexible'\n            }\n        ];\n\n        // Enhanced TOC indicators - more comprehensive detection\n        this.tocIndicators = [\n            /^table\\s+of\\s+contents$/i,\n            /^table\\s+des\\s+matières$/i,  // French TOC\n            /^sommaire$/i,\n            /^contents$/i,\n            /^index$/i,\n            /\\.{3,}/, // dots leading to page numbers\n            /\\s+\\d+$/, // ends with page number\n            /^\\d+$/, // just a page number\n            /^(chapter|chapitre)\\s+\\d+\\s*\\.{3,}/, // chapter with dots\n            /^(section|part|partie)\\s+[ivx\\d]+\\s*\\.{3,}/i, // section with dots\n            /^\\d+\\s+\\w+.*\\t\\d+$/, // number + text + tab + page number\n            /^\\d+\\.\\d+\\s+.*\\t\\d+$/, // subsection with page number\n            /^\\d+\\s+\\w+.*\\s+\\d+$/, // \"1 Section Name 25\" format\n            /^[IVX]+\\s+\\w+.*\\s+\\d+$/, // \"I Section Name 25\" format\n            /^\\w+.*\\s+\\d{1,3}$/, // any text ending with 1-3 digit number (likely page ref)\n            /^\\d+\\s+[A-Za-zÀ-ÿ].*\\d+$/ // number + text + number (TOC entry)\n        ];\n\n        this.sectionEndIndicators = [\n            /^references?$/i,\n            /^bibliography$/i,\n            /^bibliographie$/i,\n            /^appendix$/i,\n            /^annexe$/i,\n            /^conclusion$/i,\n            /^index$/i,\n            /^glossary$/i,\n            /^glossaire$/i\n        ];\n\n        // Keywords that indicate actual content start\n        this.contentStartIndicators = [\n            /^(introduction|overview|abstract|résumé|préface|preface)$/i,\n            /^(objectif|modalités|architecture|action)/i,  // French content indicators\n            /^(chapter|chapitre)\\s+\\d+[^\\.]/, // chapter without dots (not TOC)\n            /^(part|partie)\\s+[ivx\\d]+[^\\.]/, // part without dots\n            /^\\d+\\s+[a-zA-ZÀ-ÿ]/, // numbered section with text (including French characters)\n            /^[IVX]+\\s+[a-zA-ZÀ-ÿ]/, // roman numbered section with text\n            /^\\d+\\.\\d+\\s+[a-zA-ZÀ-ÿ]/, // subsection pattern\n            // More flexible patterns for various document structures\n            /^[a-zA-ZÀ-ÿ]{3,}.*[a-zA-ZÀ-ÿ]$/ // Any meaningful text line (not just numbers/symbols)\n        ];\n    }\n\n    detectTocEnd(lines) {\n        let tocStartFound = false;\n        let tocEndIndex = 0;\n        let potentialContentStart = -1;\n        let consecutiveContentLines = 0;\n        \n        // First, try to find where TOC actually starts\n        for (let i = 0; i < lines.length; i++) {\n            const line = lines[i].trim().toLowerCase();\n            if (/^(table\\s+of\\s+contents|table\\s+des\\s+matières|sommaire|contents)$/i.test(line)) {\n                tocStartFound = true;\n                console.log(`Found TOC at line ${i}: ${line}`);\n                break;\n            }\n        }\n\n        // Look for the end of TOC by finding actual content\n        for (let i = 0; i < lines.length; i++) {\n            const line = lines[i].trim();\n            const lineClean = line.toLowerCase();\n            \n            // Skip empty lines and basic noise\n            if (!line || this.isContentNoise(line)) {\n                consecutiveContentLines = 0; // Reset counter\n                continue;\n            }\n            \n            // Skip obvious header/metadata lines that appear before content\n            if (this.isLineNoise(line)) {\n                consecutiveContentLines = 0; // Reset counter\n                continue;\n            }\n            \n            // Check if this line looks like TOC content (has dots leading to page numbers, etc.)\n            const isTocLine = this.tocIndicators.some(indicator => indicator.test(line));\n            \n            if (!isTocLine) {\n                // Check if this looks like actual content start\n                const isContentStart = this.contentStartIndicators.some(indicator => \n                    indicator.test(line)\n                );\n                \n                // Check for section patterns (more flexible)\n                const hasValidSectionPattern = this.sectionPatterns.some(patternSet => \n                    patternSet.main.test(line) || patternSet.sub.test(line) || patternSet.subsub.test(line)\n                );\n                \n                // Enhanced content detection - look for meaningful text\n                const looksLikeContent = line.length > 15 && // Longer lines are more likely content\n                    /[a-zA-ZÀ-ÿ]{5,}/.test(line) && // Contains substantial text\n                    !/^\\d+$/.test(line) && // Not just a number\n                    !line.includes('\\t') && // Not a TOC line with tabs\n                    !/^\\d+\\s+\\w+.*\\d+$/.test(line) && // Not \"1 Section Name 25\" format\n                    !/\\d+$/.test(line.trim()) && // Doesn't end with just a number (page ref)\n                    !/^[IVX]+\\s+\\w+.*\\d+$/.test(line); // Not roman numeral TOC entry\n                \n                if (isContentStart || hasValidSectionPattern) {\n                    console.log(`Found definitive content start at line ${i}: ${line}`);\n                    tocEndIndex = i;\n                    break;\n                } else if (looksLikeContent) {\n                    consecutiveContentLines++;\n                    if (potentialContentStart === -1) {\n                        potentialContentStart = i;\n                    }\n                    \n                    // If we have 2+ consecutive lines that look like content, it's probably real content\n                    if (consecutiveContentLines >= 2) {\n                        console.log(`Found content start by consecutive lines at ${potentialContentStart}: ${lines[potentialContentStart]}`);\n                        tocEndIndex = potentialContentStart;\n                        break;\n                    }\n                } else {\n                    consecutiveContentLines = 0; // Reset if this line doesn't look like content\n                    potentialContentStart = -1;\n                }\n            } else {\n                consecutiveContentLines = 0; // Reset counter for TOC lines\n                potentialContentStart = -1;\n            }\n        }\n        \n        console.log(`Content starts at line ${tocEndIndex}`);\n        return tocEndIndex;\n    }\n\n    detectNumberingScheme(contentLines) {\n        const schemeScores = {};\n        this.sectionPatterns.forEach(pattern => {\n            schemeScores[pattern.name] = 0;\n        });\n\n        // Check more lines to get better detection\n        const linesToCheck = contentLines.slice(0, 150); // Increased range\n        for (const line of linesToCheck) {\n            const lineClean = line.trim();\n            if (!lineClean || this.isLineNoise(lineClean)) continue;\n            \n            for (const patternSet of this.sectionPatterns) {\n                if (patternSet.main.test(lineClean)) {\n                    schemeScores[patternSet.name] += 3; // Main sections get more weight\n                } else if (patternSet.sub.test(lineClean)) {\n                    schemeScores[patternSet.name] += 2;\n                } else if (patternSet.subsub.test(lineClean)) {\n                    schemeScores[patternSet.name] += 1;\n                }\n            }\n        }\n\n        const bestScheme = Object.entries(schemeScores).reduce((a, b) => (a[1] > b[1] ? a : b));\n        if (bestScheme[1] > 0) {\n            return this.sectionPatterns.find(p => p.name === bestScheme[0]);\n        }\n        \n        // If no clear pattern found, use flexible pattern\n        return this.sectionPatterns.find(p => p.name === 'flexible') || this.sectionPatterns[1];\n    }\n\n    isLineNoise(line) {\n        const lineClean = line.trim().toLowerCase();\n        const noisePatterns = [\n            /^\\d+$/, // just a number\n            /^page\\s+\\d+/i, // page number\n            /©.*/, // copyright\n            /^\\s*$/, // empty\n            /^(figure|table|tableau)\\s+\\d+/i, // figure/table references\n            /^\\w+\\s+\\d{4}$/, // year references\n            /^chapter\\s+\\d+$/i, // standalone chapter\n            /^chapitre\\s+\\d+$/i, // standalone chapitre\n            /^-{3,}$/, // horizontal lines\n            /^={3,}$/, // horizontal lines\n            /^\\*{3,}$/, // asterisk lines\n            /^version$/i, // version headers\n            /^date$/i, // date headers\n            /^objet$/i, // object headers\n            /^\\d{2}\\/\\d{2}\\/\\d{4}$/, // date format\n            /^(titre|statut|auteur)(\\s+du\\s+document)?\\s*:?\\s*$/i, // French document metadata\n            /^historique\\s+de\\s+version$/i,\n            /^\\w+\\s*:\\s*$/ // single word followed by colon (metadata)\n        ];\n        return noisePatterns.some(pattern => pattern.test(lineClean));\n    }\n\n    // New method to check if line is noise specifically for content (more lenient)\n    isContentNoise(line) {\n        const lineClean = line.trim().toLowerCase();\n        const contentNoisePatterns = [\n            /^\\s*$/, // empty\n            /^-{3,}$/, // horizontal lines\n            /^={3,}$/, // horizontal lines\n            /^\\*{3,}$/, // asterisk lines\n            /^page\\s+\\d+/i, // page number\n            /^page\\s*:\\s*\\d+/i, // page: number\n            /^\\d+\\s*$/, // just a number (likely page number)\n            /^\\d{1,3}$/, // standalone numbers 1-999 (page numbers)\n            /^p\\.\\s*\\d+/i, // p. 123\n            /©.*/, // copyright\n            /^\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}$/, // dates like 10/08/2017\n            /^\\d{1,2}-\\d{1,2}-\\d{2,4}$/, // dates like 10-08-2017\n            /^\\d{4}-\\d{1,2}-\\d{1,2}$/, // dates like 2017-08-10\n            /^\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}$/, // dates like 10.08.2017\n            /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/i, // French days\n            /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i, // English days\n            /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/i, // French months\n            /^(january|february|march|april|may|june|july|august|september|october|november|december)/i, // English months\n            /^\\w+\\s+\\d{4}$/, // Month Year format\n            /^version\\s*:?\\s*\\d/i, // version numbers\n            /^v\\d+\\.\\d+/i, // version like v1.0\n            /^révision\\s*:?\\s*\\d/i, // French revision\n            /^revision\\s*:?\\s*\\d/i // English revision\n        ];\n        return contentNoisePatterns.some(pattern => pattern.test(lineClean));\n    }\n\n    extractSectionsFromDocument(documentText) {\n        const lines = documentText.split('\\n');\n        const contentStart = this.detectTocEnd(lines);\n        const contentLines = lines.slice(contentStart);\n        const patternSet = this.detectNumberingScheme(contentLines);\n\n        console.log(`TOC ends at line ${contentStart}, using ${patternSet.name} numbering scheme`);\n        console.log(`First few content lines:`, contentLines.slice(0, 10));\n\n        const sections = {};\n        let currentSection = null;\n        let currentSubsection = null;\n        let currentSubsubsection = null;\n        let currentText = [];\n\n        const saveCurrentContent = () => {\n            if (currentText.length > 0 && currentSection) {\n                const content = currentText.join('\\n').trim();\n                if (content && content.length > 3) { // Reduced minimum length requirement\n                    if (currentSubsubsection) {\n                        if (!sections[currentSection].subsections[currentSubsection].subsubsections[currentSubsubsection]) {\n                            sections[currentSection].subsections[currentSubsection].subsubsections[currentSubsubsection] = {\n                                title: currentSubsubsection.split(/[.\\s]+/).slice(1).join(' ') || '',\n                                content: '',\n                                sectionNumber: currentSubsubsection.split(/[.\\s]+/)[0] || '',\n                                level: 3\n                            };\n                        }\n                        sections[currentSection].subsections[currentSubsection].subsubsections[currentSubsubsection].content = content;\n                    } else if (currentSubsection) {\n                        if (!sections[currentSection].subsections[currentSubsection]) {\n                            sections[currentSection].subsections[currentSubsection] = {\n                                title: currentSubsection.split(/[.\\s]+/).slice(1).join(' ') || '',\n                                content: '',\n                                subsubsections: {},\n                                sectionNumber: currentSubsection.split(/[.\\s]+/)[0] || '',\n                                level: 2\n                            };\n                        }\n                        sections[currentSection].subsections[currentSubsection].content = content;\n                    } else {\n                        sections[currentSection].content = content;\n                    }\n                    console.log(`Saved content for ${currentSubsubsection || currentSubsection || currentSection}: ${content.substring(0, 100)}...`);\n                }\n            }\n            currentText = [];\n        };\n\n        for (let i = 0; i < contentLines.length; i++) {\n            const line = contentLines[i].trim();\n            \n            // Skip only truly empty lines and very specific noise\n            if (!line || this.isContentNoise(line)) {\n                continue;\n            }\n            \n            // Check for document end indicators\n            if (this.sectionEndIndicators.some(indicator => indicator.test(line.toLowerCase()))) {\n                break;\n            }\n\n            let sectionFound = false;\n\n            // Try to match main section pattern\n            const mainMatch = line.match(patternSet.main);\n            if (mainMatch && line.length < 200) { // Avoid matching long paragraphs that start with numbers\n                saveCurrentContent();\n                const sectionNum = mainMatch[1];\n                const sectionTitle = mainMatch[2].trim();\n                currentSection = `${sectionNum} ${sectionTitle}`;\n                currentSubsection = null;\n                currentSubsubsection = null;\n\n                sections[currentSection] = {\n                    title: sectionTitle,\n                    content: '',\n                    subsections: {},\n                    sectionNumber: sectionNum,\n                    level: 1\n                };\n                console.log(`Found main section: ${currentSection}`);\n                sectionFound = true;\n            }\n\n            // Try to match subsection pattern (only if main section not found)\n            if (!sectionFound) {\n                const subMatch = line.match(patternSet.sub);\n                if (subMatch && currentSection && line.length < 200) {\n                    saveCurrentContent();\n                    const subNum = subMatch[1];\n                    const subTitle = subMatch[2].trim();\n                    currentSubsection = `${subNum} ${subTitle}`;\n                    currentSubsubsection = null;\n\n                    sections[currentSection].subsections[currentSubsection] = {\n                        title: subTitle,\n                        content: '',\n                        subsubsections: {},\n                        sectionNumber: subNum,\n                        level: 2\n                    };\n                    console.log(`Found subsection: ${currentSubsection}`);\n                    sectionFound = true;\n                }\n            }\n\n            // Try to match subsubsection pattern (only if no other section found)\n            if (!sectionFound) {\n                const subsubMatch = line.match(patternSet.subsub);\n                if (subsubMatch && currentSection && currentSubsection && line.length < 200) {\n                    saveCurrentContent();\n                    const subsubNum = subsubMatch[1];\n                    const subsubTitle = subsubMatch[2].trim();\n                    currentSubsubsection = `${subsubNum} ${subsubTitle}`;\n\n                    sections[currentSection].subsections[currentSubsection].subsubsections[currentSubsubsection] = {\n                        title: subsubTitle,\n                        content: '',\n                        sectionNumber: subsubNum,\n                        level: 3\n                    };\n                    console.log(`Found subsubsection: ${currentSubsubsection}`);\n                    sectionFound = true;\n                }\n            }\n\n            // If no section pattern matched, treat it as content\n            if (!sectionFound) {\n                // Only add content if we're inside a section\n                if (currentSection) {\n                    // Apply stricter filtering for content lines to avoid dates, page numbers, etc.\n                    if (line.length > 2 && \n                        !this.isContentNoise(line) && \n                        !/^\\d{1,3}$/.test(line) && // Not just a number (page ref)\n                        !/^\\d+\\/\\d+\\/\\d+$/.test(line) && // Not a date\n                        !/^v?\\d+\\.\\d+/i.test(line) && // Not a version number\n                        !/^page\\s*:?\\s*\\d+/i.test(line)) { // Not a page reference\n                        currentText.push(line);\n                    }\n                }\n            }\n        }\n\n        // Save any remaining content\n        saveCurrentContent();\n\n        return {\n            sections: sections,\n            metadata: {\n                numberingScheme: patternSet.name,\n                contentStartLine: contentStart,\n                totalSections: Object.keys(sections).length,\n                sectionsFound: Object.keys(sections)\n            }\n        };\n    }\n\n    createChunks(sections, maxChunkSize = 1000) {\n        const chunks = [];\n        let chunkId = 1;\n\n        for (const [sectionKey, sectionData] of Object.entries(sections)) {\n            // Process main section content\n            if (sectionData.content && sectionData.content.trim()) {\n                const content = sectionData.content.trim();\n                if (content.length > maxChunkSize) {\n                    // Split large content into smaller chunks\n                    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);\n                    let currentChunk = '';\n                    let partNumber = 1;\n                    \n                    for (const sentence of sentences) {\n                        if ((currentChunk + sentence).length > maxChunkSize && currentChunk) {\n                            chunks.push({\n                                id: chunkId,\n                                content: currentChunk.trim(),\n                                section: sectionKey,\n                                level: 1,\n                                metadata: {\n                                    sectionNumber: sectionData.sectionNumber || '',\n                                    title: sectionData.title || '',\n                                    chunkPart: partNumber,\n                                    totalParts: Math.ceil(content.length / maxChunkSize)\n                                }\n                            });\n                            chunkId++;\n                            partNumber++;\n                            currentChunk = sentence;\n                        } else {\n                            currentChunk += sentence;\n                        }\n                    }\n                    \n                    // Add remaining content\n                    if (currentChunk.trim()) {\n                        chunks.push({\n                            id: chunkId,\n                            content: currentChunk.trim(),\n                            section: sectionKey,\n                            level: 1,\n                            metadata: {\n                                sectionNumber: sectionData.sectionNumber || '',\n                                title: sectionData.title || '',\n                                chunkPart: partNumber,\n                                totalParts: partNumber\n                            }\n                        });\n                        chunkId++;\n                    }\n                } else {\n                    chunks.push({\n                        id: chunkId,\n                        content: content,\n                        section: sectionKey,\n                        level: 1,\n                        metadata: {\n                            sectionNumber: sectionData.sectionNumber || '',\n                            title: sectionData.title || ''\n                        }\n                    });\n                    chunkId++;\n                }\n            }\n\n            // Process subsections\n            for (const [subsecKey, subsecData] of Object.entries(sectionData.subsections || {})) {\n                if (subsecData.content && subsecData.content.trim()) {\n                    chunks.push({\n                        id: chunkId,\n                        content: subsecData.content.trim(),\n                        section: `${sectionKey} > ${subsecKey}`,\n                        level: 2,\n                        metadata: {\n                            parentSection: sectionKey,\n                            sectionNumber: subsecData.sectionNumber || '',\n                            title: subsecData.title || ''\n                        }\n                    });\n                    chunkId++;\n                }\n\n                // Process subsubsections\n                for (const [subsubsecKey, subsubsecData] of Object.entries(subsecData.subsubsections || {})) {\n                    if (subsubsecData.content && subsubsecData.content.trim()) {\n                        chunks.push({\n                            id: chunkId,\n                            content: subsubsecData.content.trim(),\n                            section: `${sectionKey} > ${subsecKey} > ${subsubsecKey}`,\n                            level: 3,\n                            metadata: {\n                                parentSection: sectionKey,\n                                parentSubsection: subsecKey,\n                                sectionNumber: subsubsecData.sectionNumber || '',\n                                title: subsubsecData.title || ''\n                            }\n                        });\n                        chunkId++;\n                    }\n                }\n            }\n        }\n\n        return chunks;\n    }\n}\n\n// Execute the chunker\nconst chunker = new FlexibleDocumentChunker();\nconst result = chunker.extractSectionsFromDocument(document_text);\nconst chunks = chunker.createChunks(result.sections, 1000);\n\nreturn [{\n    json: {\n        sections: result.sections,\n        chunks: chunks,\n        metadata: {\n            ...result.metadata,\n            totalChunks: chunks.length,\n            averageChunkLength: chunks.length > 0 ? Math.round(\n                chunks.reduce((sum, chunk) => sum + chunk.content.length, 0) / chunks.length\n            ) : 0\n        }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2700,
+        400
+      ],
+      "id": "1d5ee5c6-1081-4ef8-9d56-a71e9b33ee2a",
+      "name": "Preprocessing & Chunking",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "43bcaecd-6535-455d-89a6-d2251b174362"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Presentation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "45ab597a-20d4-43b4-8cb5-a72abd2e57ef",
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pdf"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2dd3540d-5223-4202-b173-7c544322844c",
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fc9d88ea-e418-4fde-bfa9-8946650f6e0f",
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sheet"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1500,
+        420
+      ],
+      "id": "e41b7560-78b5-49ac-bff5-f5aa8a7028a5",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        840
+      ],
+      "id": "a1ab3812-4fa3-4616-b1cf-6138d238e99a",
+      "name": "Extract from File2"
+    },
+    {
+      "parameters": {
+        "content": "## Extracting Text from files",
+        "height": 960,
+        "width": 1300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        -20
+      ],
+      "id": "6c363fc1-22cb-4a17-957c-c5df7a2bb995",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-docx-converter.docxToText",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        520
+      ],
+      "id": "10912b57-4106-45fb-8eee-2d8f2d82a26b",
+      "name": "DOCX to Text",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1OolimYIubI-lKz2kzOblz-0Y7R2zHzQO",
+          "mode": "id"
+        },
+        "event": "watchFolderUpdated"
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        140
+      ],
+      "id": "09f0acf6-d5f2-4348-a157-b24c85e00253",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YFKTU5UJQl1ro5vW",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1OolimYIubI-lKz2kzOblz-0Y7R2zHzQO",
+            "mode": "id"
+          }
+        },
+        "options": {
+          "fields": [
+            "mimeType",
+            "name",
+            "id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        80,
+        140
+      ],
+      "id": "7ed177f3-c9bb-452e-8ab7-fab79c3b0d7a",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YFKTU5UJQl1ro5vW",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "12c9dea6-1573-4d63-889f-05fc3eeff9c0",
+              "leftValue": "={{ $json.mimeType }}",
+              "rightValue": "application/vnd.google-apps.folder",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        140
+      ],
+      "id": "5bdd9d2b-eb33-4a38-ae53-2793b324118b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          }
+        },
+        "options": {
+          "fields": [
+            "id",
+            "mimeType",
+            "name"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        640,
+        140
+      ],
+      "id": "d812020d-55aa-4864-b76c-0024ec477eb1",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YFKTU5UJQl1ro5vW",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let results = [],\n    i = 0;\n\nwhile (true) {\n  try {\n    const batch = $(\"NoOp Merge\").all(0, i);  // Use exact node name\n    results.push(...batch);\n    i++;\n  } catch (err) {\n    break;\n  }\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        440
+      ],
+      "id": "dae10a1a-fbb7-42f1-a1df-863408c5cb34",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        460,
+        440
+      ],
+      "id": "9f0ae4e9-d976-47f0-980d-bbe4d982ae83",
+      "name": "NoOp Merge"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1300,
+        440
+      ],
+      "id": "7590995a-ce5b-4646-aae8-38419a0bc43e",
+      "name": "Download files",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YFKTU5UJQl1ro5vW",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst runNumber = $runIndex + 1;\n\nif (runNumber === 4) {\n  return allItems.map(item => ({\n    json: {\n      ...item.json,\n      runNumber\n    }\n  }));\n}\n\n// Otherwise, return nothing\nreturn [];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        440
+      ],
+      "id": "fc986454-5a58-48af-ae99-1ece631a6dc4",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        440
+      ],
+      "id": "5b716f8c-66bc-43cb-b229-35b05f4ec59c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5000/store_chunks",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.chunks }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4160,
+        420
+      ],
+      "id": "8df8ee73-9742-4b34-9840-8e9f3eb9900a",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        1900,
+        20
+      ],
+      "id": "721b2662-cec9-49f3-9e6b-fa2aad9baf00",
+      "name": "Compression",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const bin = items[0].binary.data;\nbin.fileName = bin.fileName.replace(/\\.pptx$/i, '.zip');\nbin.fileExtension = 'zip';\nbin.mimeType = 'application/zip';\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        20
+      ],
+      "id": "bd0f4b2c-dfe8-4dc1-be72-e7e59353dd58",
+      "name": "Tutn .pptx to .zip"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Enhanced PPTX Text Extraction - Completely Clean Version\nconst slides = [];\n\n// Check if we have binary data\nif (!$input.first().binary) {\n  throw new Error('No binary data found. Check decompression node.');\n}\n\n// Enhanced function to clean and decode HTML entities and XML remnants\nfunction cleanTextContent(text) {\n  if (!text) return '';\n  \n  return text\n    // First decode HTML entities\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&amp;/g, '&')\n    .replace(/&quot;/g, '\"')\n    .replace(/&apos;/g, \"'\")\n    .replace(/&#x[0-9A-Fa-f]+;/g, '') // Remove hex entities\n    .replace(/&#\\d+;/g, '') // Remove decimal entities\n    \n    // Remove any remaining XML tags completely\n    .replace(/<[^>]*>/g, '')\n    \n    // Remove XML-like attributes and namespaces\n    .replace(/\\w+:\\w+=\"[^\"]*\"/g, '')\n    .replace(/\\w+:\\w+/g, '')\n    \n    // Remove common XML formatting artifacts\n    .replace(/xmlns[^=]*=\"[^\"]*\"/g, '')\n    .replace(/val=\"[^\"]*\"/g, '')\n    .replace(/uri=\"[^\"]*\"/g, '')\n    \n    // Remove pipe characters that might be XML artifacts\n    .replace(/^\\|+|\\|+$/g, '')\n    .replace(/\\|\\s*\\|/g, '|')\n    \n    // Clean up whitespace and normalize\n    .replace(/\\s+/g, ' ')\n    .replace(/\\|\\s+/g, '| ')\n    .replace(/\\s+\\|/g, ' |')\n    .trim();\n}\n\n// Enhanced function to check if text is likely XML formatting\nfunction isXMLFormatting(text) {\n  if (!text || text.length === 0) return true;\n  \n  const formatPatterns = [\n    // XML elements and attributes\n    /<[^>]*>/,\n    /xmlns:/,\n    /uri=\"/,\n    /val=\"/,\n    /\\w+:\\w+=/,\n    \n    // IDs and technical identifiers\n    /^[0-9A-F-]{8,}$/i,\n    /^[a-zA-Z0-9-]{20,}$/,\n    /{[0-9A-F-]{8,}}/i,\n    /^[A-Z0-9]{10,}$/,\n    \n    // PowerPoint specific artifacts\n    /<a:[\\w]+/,\n    /<\\/a:[\\w]+>/,\n    /marL=\"\\d+\"/,\n    /sz=\"\\d+\"/,\n    /defTabSz=\"\\d+\"/,\n    /spcPct val=\"\\d+\"/,\n    /typeface=\"[^\"]*\"/,\n    /charset=\"\\d+\"/,\n    /pitchFamily=\"\\d+\"/,\n    /panose=\"[^\"]*\"/,\n    \n    // Common PowerPoint formatting values\n    /^(0|100000|914400|685150|171450)$/,\n    /^(none|auto|l|ctr)$/,\n    /^[0-9A-F]{6}$/i, // Color codes\n    \n    // Empty or whitespace-only content\n    /^\\s*$/,\n    /^[\\s\\|]*$/\n  ];\n  \n  return formatPatterns.some(pattern => pattern.test(text));\n}\n\n// Enhanced function to check if text is meaningful content\nfunction isMeaningfulText(text) {\n  if (!text || typeof text !== 'string') return false;\n  \n  // Clean the text first\n  const cleaned = text.trim();\n  if (cleaned.length === 0) return false;\n  \n  // Must contain letters\n  if (!/[a-zA-ZÀ-ÿ]/.test(cleaned)) return false;\n  \n  // Check for XML artifacts\n  if (isXMLFormatting(cleaned)) return false;\n  \n  // Must be longer than 1 character or be a meaningful short word\n  if (cleaned.length <= 1) return false;\n  \n  // Allow meaningful short words and content\n  const meaningfulShortWords = /^(a|I|is|or|to|in|of|on|at|be|we|he|it|me|us|go|no|so|up|do|if|my|by|et|le|la|de|du|en|un|ce|se|ne|te|sa|ma|ta|va|au|ou|si|ca|ça)$/i;\n  if (cleaned.length <= 2 && !meaningfulShortWords.test(cleaned)) {\n    return false;\n  }\n  \n  // Should have a reasonable ratio of letters to other characters\n  const letterCount = (cleaned.match(/[a-zA-ZÀ-ÿ]/g) || []).length;\n  const totalCount = cleaned.length;\n  const letterRatio = letterCount / totalCount;\n  \n  // Must have at least 30% letters\n  if (letterRatio < 0.3) return false;\n  \n  // Additional checks for common artifacts\n  if (/^[0-9\\s\\|\\-_+=<>(){}[\\]]*$/.test(cleaned)) return false;\n  \n  return true;\n}\n\n// Function to extract and clean table content\nfunction extractTableContent(xmlContent) {\n  const tableTexts = [];\n  \n  // Remove XML processing instructions and comments first\n  const cleanXML = xmlContent\n    .replace(/<\\?xml[^>]*\\?>/g, '')\n    .replace(/<!--.*?-->/gs, '');\n  \n  // Find all table elements\n  const tableRegex = /<a:tbl[^>]*?>([\\s\\S]*?)<\\/a:tbl>/g;\n  let tableMatch;\n  \n  while ((tableMatch = tableRegex.exec(cleanXML))) {\n    const tableXml = tableMatch[1];\n    \n    // Extract all text from table rows\n    const rowRegex = /<a:tr[^>]*?>([\\s\\S]*?)<\\/a:tr>/g;\n    const tableRows = [];\n    let rowMatch;\n    \n    while ((rowMatch = rowRegex.exec(tableXml))) {\n      const rowXml = rowMatch[1];\n      \n      // Extract text from cells in this row\n      const cellRegex = /<a:tc[^>]*?>([\\s\\S]*?)<\\/a:tc>/g;\n      const rowCells = [];\n      let cellMatch;\n      \n      while ((cellMatch = cellRegex.exec(rowXml))) {\n        const cellXml = cellMatch[1];\n        \n        // Extract all text content from the cell\n        const textRegex = /<a:t[^>]*?>([\\s\\S]*?)<\\/a:t>/g;\n        const cellTexts = [];\n        let textMatch;\n        \n        while ((textMatch = textRegex.exec(cellXml))) {\n          const rawText = textMatch[1];\n          const cleanedText = cleanTextContent(rawText);\n          \n          if (cleanedText && isMeaningfulText(cleanedText)) {\n            cellTexts.push(cleanedText);\n          }\n        }\n        \n        if (cellTexts.length > 0) {\n          rowCells.push(cellTexts.join(' '));\n        }\n      }\n      \n      if (rowCells.length > 0) {\n        tableRows.push(rowCells.join(' | '));\n      }\n    }\n    \n    if (tableRows.length > 0) {\n      tableTexts.push(...tableRows);\n    }\n  }\n  \n  return tableTexts;\n}\n\n// Process each slide file\nfor (const [key, file] of Object.entries($input.first().binary)) {\n  if (file.fileName && file.fileName.match(/^slide\\d+\\.xml$/)) {\n    const slideNumber = parseInt(file.fileName.match(/\\d+/)[0]);\n    \n    // Convert binary to XML string\n    const xmlContent = Buffer.from(file.data, file.data.encoding || 'base64').toString('utf8');\n    \n    // Extract table content first\n    const tableTexts = extractTableContent(xmlContent);\n    \n    // Extract regular text content (excluding tables to avoid duplication)\n    const xmlWithoutTables = xmlContent.replace(/<a:tbl[^>]*?>[\\s\\S]*?<\\/a:tbl>/g, '');\n    \n    // Extract all text from <a:t> tags\n    const textRegex = /<a:t[^>]*?>([\\s\\S]*?)<\\/a:t>/g;\n    const regularTextParts = [];\n    let match;\n    \n    while ((match = textRegex.exec(xmlWithoutTables))) {\n      const rawText = match[1];\n      const cleanedText = cleanTextContent(rawText);\n      \n      if (cleanedText && isMeaningfulText(cleanedText)) {\n        regularTextParts.push(cleanedText);\n      }\n    }\n    \n    // Combine all text parts\n    const allTextParts = [...regularTextParts, ...tableTexts];\n    \n    // Remove duplicates and very similar text\n    const uniqueTextParts = [];\n    const seen = new Set();\n    \n    for (const part of allTextParts) {\n      const normalized = part.toLowerCase().replace(/\\s+/g, ' ').trim();\n      \n      // Skip empty or already seen content\n      if (normalized.length > 0 && !seen.has(normalized)) {\n        seen.add(normalized);\n        uniqueTextParts.push(part);\n      }\n    }\n    \n    // Final cleaning pass\n    const finalTextParts = uniqueTextParts\n      .map(part => cleanTextContent(part))\n      .filter(part => part && isMeaningfulText(part))\n      .filter(part => part.length > 0);\n    \n    slides.push({\n      slideNumber: slideNumber,\n      slideText: finalTextParts.join(' '),\n      textParts: finalTextParts,\n      regularTextCount: regularTextParts.length,\n      tableTextCount: tableTexts.length,\n      totalPartsCount: allTextParts.length,\n      cleanPartsCount: finalTextParts.length\n    });\n  }\n}\n\n// Sort slides by number\nslides.sort((a, b) => a.slideNumber - b.slideNumber);\n\n// Create combined output with better formatting\nconst fullPresentation = slides\n  .map(slide => {\n    if (slide.slideText.trim().length > 0) {\n      return `=== SLIDE ${slide.slideNumber} ===\\n${slide.slideText}`;\n    }\n    return `=== SLIDE ${slide.slideNumber} ===\\n[No readable text content]`;\n  })\n  .join('\\n\\n');\n\n// Create clean text without slide markers\nconst cleanTextOutput = slides\n  .map(slide => slide.slideText.trim())\n  .filter(text => text.length > 0)\n  .join('\\n\\n');\n\n// Log extraction stats\nconsole.log(`Successfully extracted text from ${slides.length} slides`);\nslides.forEach(slide => {\n  console.log(`Slide ${slide.slideNumber}: ${slide.regularTextCount} regular + ${slide.tableTextCount} table texts = ${slide.cleanPartsCount} final clean parts`);\n});\n\nreturn [{\n  json: {\n    slides: slides,\n    fullPresentation: fullPresentation,\n    cleanText: cleanTextOutput,\n    totalSlides: slides.length,\n    \n    // Statistics\n    stats: {\n      totalSlides: slides.length,\n      slidesWithText: slides.filter(s => s.slideText.trim().length > 0).length,\n      totalTextParts: slides.reduce((sum, slide) => sum + slide.cleanPartsCount, 0),\n      totalCharacters: cleanTextOutput.length,\n      averagePartsPerSlide: slides.length > 0 ? \n        (slides.reduce((sum, slide) => sum + slide.cleanPartsCount, 0) / slides.length).toFixed(1) : 0\n    },\n    \n    // Debug info (remove in production)\n    debug: {\n      slidesDetail: slides.map(slide => ({\n        slideNumber: slide.slideNumber,\n        textLength: slide.slideText.length,\n        partsCount: slide.cleanPartsCount,\n        hasContent: slide.slideText.trim().length > 0\n      }))\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2120,
+        20
+      ],
+      "id": "3b916f86-6fe6-47dc-bf1c-ebd4ed9b68d0",
+      "name": "PPTX Text Extraction"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get Excel data from n8n input\nconst excel_data = $input.all();\n\nclass ExcelRowChunker {\n    // Convert Excel row to readable text\n    convertRowToText(rowItem) {\n        const row = rowItem.json;\n        const textParts = [];\n        \n        for (const [key, value] of Object.entries(row)) {\n            // Skip the myNewField and process only actual content\n            if (key === 'myNewField') continue;\n            \n            if (value && String(value).trim()) {\n                // Clean up column names - remove __EMPTY prefixes\n                let cleanKey = key;\n                if (key.startsWith('__EMPTY')) {\n                    cleanKey = key.replace('__EMPTY_', 'Col').replace('__EMPTY', 'Col');\n                }\n                textParts.push(`${cleanKey}: ${String(value).trim()}`);\n            }\n        }\n        return textParts.join(' | ');\n    }\n\n    // Check if row is empty (only has myNewField or all empty values)\n    isEmptyRow(rowItem) {\n        const row = rowItem.json;\n        const contentKeys = Object.keys(row).filter(key => key !== 'myNewField');\n        return contentKeys.length === 0 || \n               !contentKeys.some(key => row[key] && String(row[key]).trim());\n    }\n\n    // Create chunks of 10 rows each\n    createChunks(excelData, chunkSize = 10) {\n        const chunks = [];\n        let chunkId = 1;\n\n        // Filter out empty rows\n        const validRows = excelData.filter(rowItem => !this.isEmptyRow(rowItem));\n        \n        console.log(`Processing ${validRows.length} valid rows from ${excelData.length} total rows`);\n\n        // Create chunks\n        for (let i = 0; i < validRows.length; i += chunkSize) {\n            const rowChunk = validRows.slice(i, i + chunkSize);\n            \n            // Convert rows to text content\n            const chunkLines = rowChunk.map(rowItem => this.convertRowToText(rowItem));\n            const chunkContent = chunkLines.join('\\n');\n\n            if (chunkContent.trim()) {\n                chunks.push({\n                    id: chunkId,\n                    content: chunkContent,\n                    metadata: {\n                        chunkNumber: chunkId,\n                        totalRows: rowChunk.length,\n                        startRow: i + 1,\n                        endRow: Math.min(i + chunkSize, validRows.length),\n                        sourceType: 'excel'\n                    }\n                });\n                \n                console.log(`Created chunk ${chunkId} with ${rowChunk.length} rows`);\n                chunkId++;\n            }\n        }\n\n        return chunks;\n    }\n}\n\n// Execute the chunker\nconst chunker = new ExcelRowChunker();\nconst chunks = chunker.createChunks(excel_data, 10);\n\nconsole.log(`Created ${chunks.length} chunks`);\n\n// Return the chunks\nreturn [{\n    json: {\n        chunks: chunks,\n        metadata: {\n            totalChunks: chunks.length,\n            rowsPerChunk: 10,\n            totalProcessedRows: excel_data.filter(rowItem => !chunker.isEmptyRow(rowItem)).length,\n            sourceType: 'excel'\n        }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        780
+      ],
+      "id": "4b30d33d-c033-4eaf-aebb-8bd3778781f0",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get slide data from n8n input\nconst slides_data = $input.first().json.slides;\n\nclass SlideChunker {\n    constructor() {\n        // No complex processing needed - just chunk by slide\n    }\n\n    // Create chunks - one chunk per slide\n    createChunks(slidesData) {\n        const chunks = [];\n\n        for (let i = 0; i < slidesData.length; i++) {\n            const slideItem = slidesData[i];\n            let slide;\n            \n            // Handle different data structures\n            if (slideItem.json) {\n                slide = slideItem.json;\n            } else if (slideItem.slideNumber) {\n                slide = slideItem;\n            } else {\n                continue; // Skip if no recognizable structure\n            }\n            \n            // Skip slides without content\n            if (!slide.slideText || slide.slideText.trim().length === 0) {\n                console.log(`Skipping slide ${slide.slideNumber || i} - no slideText`);\n                continue;\n            }\n\n            console.log(`Processing slide ${slide.slideNumber}: ${slide.slideText.substring(0, 50)}...`);\n\n            chunks.push({\n                id: slide.slideNumber || (i + 1),\n                content: slide.slideText.trim(),\n                metadata: {\n                    slideNumber: slide.slideNumber || (i + 1),\n                    totalTextParts: slide.totalPartsCount || 0,\n                    regularTextCount: slide.regularTextCount || 0,\n                    tableTextCount: slide.tableTextCount || 0,\n                    cleanPartsCount: slide.cleanPartsCount || 0,\n                    sourceType: 'powerpoint',\n                    contentLength: slide.slideText.trim().length\n                }\n            });\n        }\n\n        console.log(`Created ${chunks.length} chunks from ${slidesData.length} slides`);\n        return chunks;\n    }\n}\n\n// Execute the chunker\nconst chunker = new SlideChunker();\nconst chunks = chunker.createChunks(slides_data);\n\nconsole.log(`Input data structure:`, slides_data.slice(0, 2)); // Debug first 2 items\nconsole.log(`Generated chunks:`, chunks.length);\n\n// Return same format as your other chunkers\nreturn [{\n    json: {\n        chunks: chunks,\n        metadata: {\n            totalChunks: chunks.length,\n            totalSlides: slides_data.length,\n            averageChunkLength: chunks.length > 0 ? Math.round(\n                chunks.reduce((sum, chunk) => sum + chunk.content.length, 0) / chunks.length\n            ) : 0,\n            sourceType: 'powerpoint'\n        }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2700,
+        20
+      ],
+      "id": "a89c4324-b5b4-4c95-a84d-2ba5cc80b978",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "command": "nohup python3 /home/rebhi/Desktop/cyberagent/app.py > app.log 2>&1 &\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3880,
+        700
+      ],
+      "id": "a91a9ea3-6815-4b7e-9b1d-ecb1432daa3a",
+      "name": "start server"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Preprocessing & Chunking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Collection": {
+      "main": [
+        [
+          {
+            "node": "Create Collection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preprocessing & Chunking": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Tutn .pptx to .zip",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DOCX to Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DOCX to Text": {
+      "main": [
+        [
+          {
+            "node": "Preprocessing & Chunking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoOp Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NoOp Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download files": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File2": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "PPTX Text Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tutn .pptx to .zip": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PPTX Text Extraction": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "start server": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0a4a1910-1f9f-4d29-a1f9-098e695b0883",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b63d654d1de0f5a859ba5298a29f8c330e5bedbbd1735e2fe43d613a8857bf9e"
+  },
+  "id": "7qM9LUNqw9EEcN1c",
+  "tags": []
+}
