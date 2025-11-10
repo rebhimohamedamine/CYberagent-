@@ -35,8 +35,6 @@ Virtual_cyber_agent_assistant/
 
 └── ... (other specialized workflows)
 
-yaml
-Copy code
 
 ---
 
